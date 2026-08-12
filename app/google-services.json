@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "850156635770",
+    "project_id": "subtracker-85921",
+    "storage_bucket": "subtracker-85921.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:850156635770:android:a07c65e6f59331d7a1ddc3",
+        "android_client_info": {
+          "package_name": "com.efecandonmez.subtracker.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBiS04LSImRaAehoGHJuVJ9lV-12QmTlQ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

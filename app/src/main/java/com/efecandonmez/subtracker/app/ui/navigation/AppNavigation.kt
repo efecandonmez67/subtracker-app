@@ -11,6 +11,8 @@ import com.efecandonmez.subtracker.app.data.network.SubtrackerApi
 import com.efecandonmez.subtracker.app.ui.auth.AuthViewModelFactory
 import com.efecandonmez.subtracker.app.ui.auth.LoginScreen
 import com.efecandonmez.subtracker.app.ui.auth.RegisterScreen
+import com.efecandonmez.subtracker.app.ui.subscriptions.SubscriptionFormScreen
+import com.efecandonmez.subtracker.app.ui.subscriptions.SubscriptionFormViewModel
 import com.efecandonmez.subtracker.app.ui.subscriptions.SubscriptionListScreen
 import com.efecandonmez.subtracker.app.ui.subscriptions.SubscriptionListViewModel
 
@@ -41,7 +43,17 @@ fun AppNavigation(api: SubtrackerApi, tokenStore: TokenStore, modifier: Modifier
         }
         composable("subscriptions") {
             val listViewModel: SubscriptionListViewModel = viewModel { SubscriptionListViewModel(api) }
-            SubscriptionListScreen(listViewModel)
+            SubscriptionListScreen(
+                viewModel = listViewModel,
+                onAddClick = { navController.navigate("subscription_form") }
+            )
+        }
+        composable("subscription_form") {
+            val formViewModel: SubscriptionFormViewModel = viewModel { SubscriptionFormViewModel(api) }
+            SubscriptionFormScreen(
+                viewModel = formViewModel,
+                onSaved = { navController.popBackStack() }
+            )
         }
     }
 }
