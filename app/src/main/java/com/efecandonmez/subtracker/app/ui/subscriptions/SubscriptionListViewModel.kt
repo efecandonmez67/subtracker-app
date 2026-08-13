@@ -25,8 +25,12 @@ class SubscriptionListViewModel(private val api: SubtrackerApi) : ViewModel() {
             try {
                 val subs = api.getSubscriptions()
                 _uiState.value = SubscriptionListUiState.Success(subs)
+            } catch (e: java.io.IOException) {
+                _uiState.value = SubscriptionListUiState.Error("İnternet bağlantını kontrol et")
+            } catch (e: retrofit2.HttpException) {
+                _uiState.value = SubscriptionListUiState.Error("Abonelikler yüklenemedi, tekrar dene")
             } catch (e: Exception) {
-                _uiState.value = SubscriptionListUiState.Error(e.message ?: "Yüklenemedi")
+                _uiState.value = SubscriptionListUiState.Error("Beklenmeyen bir hata oluştu")
             }
         }
     }

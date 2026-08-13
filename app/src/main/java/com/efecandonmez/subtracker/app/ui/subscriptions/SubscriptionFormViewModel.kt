@@ -26,8 +26,16 @@ class SubscriptionFormViewModel(private val api: SubtrackerApi) : ViewModel() {
             try {
                 api.createSubscription(request)
                 _uiState.value = SubscriptionFormUiState.Success
+            } catch (e: java.io.IOException) {
+                _uiState.value = SubscriptionFormUiState.Error("İnternet bağlantını kontrol et")
+            } catch (e: retrofit2.HttpException) {
+                val message = when (e.code()) {
+                    400 -> "Girdiğin bilgileri kontrol et"
+                    else -> "Kaydedilemedi, tekrar dene"
+                }
+                _uiState.value = SubscriptionFormUiState.Error(message)
             } catch (e: Exception) {
-                _uiState.value = SubscriptionFormUiState.Error(e.message ?: "Kaydedilemedi")
+                _uiState.value = SubscriptionFormUiState.Error("Beklenmeyen bir hata oluştu")
             }
         }
     }
@@ -38,8 +46,17 @@ class SubscriptionFormViewModel(private val api: SubtrackerApi) : ViewModel() {
             try {
                 api.updateSubscription(id, request)
                 _uiState.value = SubscriptionFormUiState.Success
+            } catch (e: java.io.IOException) {
+                _uiState.value = SubscriptionFormUiState.Error("İnternet bağlantını kontrol et")
+            } catch (e: retrofit2.HttpException) {
+                val message = when (e.code()) {
+                    400 -> "Girdiğin bilgileri kontrol et"
+                    404 -> "Bu abonelik bulunamadı"
+                    else -> "Güncellenemedi, tekrar dene"
+                }
+                _uiState.value = SubscriptionFormUiState.Error(message)
             } catch (e: Exception) {
-                _uiState.value = SubscriptionFormUiState.Error(e.message ?: "Güncellenemedi")
+                _uiState.value = SubscriptionFormUiState.Error("Beklenmeyen bir hata oluştu")
             }
         }
     }

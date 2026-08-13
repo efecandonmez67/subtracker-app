@@ -24,7 +24,7 @@ fun RegisterScreen(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Giriş Yap", style = MaterialTheme.typography.headlineMedium)
+        Text("Kayıt Ol", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(16.dp))
 
         OutlinedTextField(
@@ -48,11 +48,11 @@ fun RegisterScreen(
             enabled = uiState !is AuthUiState.Loading,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (uiState is AuthUiState.Loading) "Yükleniyor..." else "Giriş Yap")
+            Text(if (uiState is AuthUiState.Loading) "Yükleniyor..." else "Kayıt ol")
         }
 
         TextButton(onClick = onNavigateToLogin) {
-            Text("Hesabın yok mu? Kayıt ol")
+            Text("Hesabın var mı? Giriş yap")
         }
     }
 }

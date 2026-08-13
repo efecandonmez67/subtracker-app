@@ -13,6 +13,13 @@ class AuthInterceptor(private val tokenStore: TokenStore) : Interceptor {
         if (token != null) {
             request.addHeader("Authorization", "Bearer $token")
         }
-        return chain.proceed(request.build())
+
+        val response = chain.proceed(request.build())
+
+        if (response.code == 401) {
+            runBlocking { tokenStore.clearToken() }
+        }
+
+        return response
     }
 }

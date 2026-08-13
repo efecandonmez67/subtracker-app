@@ -28,7 +28,6 @@ class AuthViewModel(
     val uiState: StateFlow<AuthUiState> = _uiState
 
     fun login(email: String, password: String) {
-        android.util.Log.d("LoginDebug", "email='$email' length=${email.length}")
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             try {
@@ -36,8 +35,16 @@ class AuthViewModel(
                 tokenStore.saveToken(response.token)
                 registerFcmToken()
                 _uiState.value = AuthUiState.Success
+            } catch (e: java.io.IOException) {
+                _uiState.value = AuthUiState.Error("İnternet bağlantını kontrol et")
+            } catch (e: retrofit2.HttpException) {
+                val message = when (e.code()) {
+                    401 -> "Email veya şifre hatalı"
+                    else -> "Bir şeyler ters gitti, tekrar dene"
+                }
+                _uiState.value = AuthUiState.Error(message)
             } catch (e: Exception) {
-                _uiState.value = AuthUiState.Error(e.message ?: "Giriş başarısız")
+                _uiState.value = AuthUiState.Error("Beklenmeyen bir hata oluştu")
             }
         }
     }
@@ -59,8 +66,17 @@ class AuthViewModel(
                 tokenStore.saveToken(response.token)
                 registerFcmToken()
                 _uiState.value = AuthUiState.Success
+            } catch (e: java.io.IOException) {
+                _uiState.value = AuthUiState.Error("İnternet bağlantını kontrol et")
+            } catch (e: retrofit2.HttpException) {
+                val message = when (e.code()) {
+                    409 -> "Bu email zaten kayıtlı"
+                    400 -> "Girdiğin bilgileri kontrol et"
+                    else -> "Bir şeyler ters gitti, tekrar dene"
+                }
+                _uiState.value = AuthUiState.Error(message)
             } catch (e: Exception) {
-                _uiState.value = AuthUiState.Error(e.message ?: "Kayıt başarısız")
+                _uiState.value = AuthUiState.Error("Beklenmeyen bir hata oluştu")
             }
         }
     }

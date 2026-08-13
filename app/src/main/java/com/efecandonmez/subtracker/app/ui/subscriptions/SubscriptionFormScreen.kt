@@ -21,6 +21,9 @@ fun SubscriptionFormScreen(
     var billingCycle by remember { mutableStateOf(existing?.billingCycle ?: "MONTHLY") }
     var nextPaymentDate by remember { mutableStateOf(existing?.nextPaymentDate ?: "") }
     var category by remember { mutableStateOf(existing?.category ?: "") }
+    var priceError by remember { mutableStateOf<String?>(null) }
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var dateError by remember { mutableStateOf<String?>(null) }
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -37,8 +40,20 @@ fun SubscriptionFormScreen(
             style = MaterialTheme.typography.headlineSmall
         )
 
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("İsim") }, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Fiyat") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = name, onValueChange = { name = it; nameError = null },
+            label = { Text("İsim") },
+            isError = nameError != null,
+            supportingText = { nameError?.let { Text(it) } },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = price, onValueChange = { price = it; priceError = null },
+            label = { Text("Fiyat") },
+            isError = priceError != null,
+            supportingText = { priceError?.let { Text(it) } },
+            modifier = Modifier.fillMaxWidth()
+        )
         OutlinedTextField(value = currency, onValueChange = { currency = it }, label = { Text("Para Birimi (USD/EUR/TRY)") }, modifier = Modifier.fillMaxWidth())
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -47,8 +62,11 @@ fun SubscriptionFormScreen(
         }
 
         OutlinedTextField(
-            value = nextPaymentDate, onValueChange = { nextPaymentDate = it },
-            label = { Text("Sonraki Ödeme (yyyy-MM-dd)") }, modifier = Modifier.fillMaxWidth()
+            value = nextPaymentDate, onValueChange = { nextPaymentDate = it; dateError = null },
+            label = { Text("Sonraki Ödeme (yyyy-MM-dd)") },
+            isError = dateError != null,
+            supportingText = { dateError?.let { Text(it) } },
+            modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Kategori") }, modifier = Modifier.fillMaxWidth())
 
@@ -58,16 +76,32 @@ fun SubscriptionFormScreen(
 
         Button(
             onClick = {
-                val request = SubscriptionRequest(
-                    name = name,
-                    price = price.toDoubleOrNull() ?: 0.0,
-                    currency = currency,
-                    billingCycle = billingCycle,
-                    nextPaymentDate = nextPaymentDate,
-                    category = category.ifBlank { null }
-                )
-                if (existing == null) viewModel.createSubscription(request)
-                else viewModel.updateSubscription(existing.id, request)
+                var hasError = false
+
+                if (name.isBlank()) { nameError = "İsim boş olamaz"; hasError = true }
+
+                val priceValue = price.toDoubleOrNull()
+                if (priceValue == null || priceValue <= 0) {
+                    priceError = "Geçerli bir fiyat girin"; hasError = true
+                }
+
+                val dateRegex = Regex("""^\d{4}-\d{2}-\d{2}$""")
+                if (!dateRegex.matches(nextPaymentDate)) {
+                    dateError = "Tarih yyyy-MM-dd formatında olmalı"; hasError = true
+                }
+
+                if (!hasError) {
+                    val request = SubscriptionRequest(
+                        name = name,
+                        price = priceValue!!,
+                        currency = currency,
+                        billingCycle = billingCycle,
+                        nextPaymentDate = nextPaymentDate,
+                        category = category.ifBlank { null }
+                    )
+                    if (existing == null) viewModel.createSubscription(request)
+                    else viewModel.updateSubscription(existing.id, request)
+                }
             },
             enabled = uiState !is SubscriptionFormUiState.Loading,
             modifier = Modifier.fillMaxWidth()
