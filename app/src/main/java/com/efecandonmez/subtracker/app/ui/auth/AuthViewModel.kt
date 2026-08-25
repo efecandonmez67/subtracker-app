@@ -28,10 +28,11 @@ class AuthViewModel(
     val uiState: StateFlow<AuthUiState> = _uiState
 
     fun login(email: String, password: String) {
+        val trimmedEmail = email.trim()
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             try {
-                val response = api.login(LoginRequest(email, password))
+                val response = api.login(LoginRequest(trimmedEmail, password))
                 tokenStore.saveToken(response.token)
                 registerFcmToken()
                 _uiState.value = AuthUiState.Success
@@ -40,6 +41,7 @@ class AuthViewModel(
             } catch (e: retrofit2.HttpException) {
                 val message = when (e.code()) {
                     401 -> "Email veya şifre hatalı"
+                    400 -> "Geçerli bir email adresi girin"
                     else -> "Bir şeyler ters gitti, tekrar dene"
                 }
                 _uiState.value = AuthUiState.Error(message)
@@ -59,10 +61,11 @@ class AuthViewModel(
     }
 
     fun register(email: String, password: String) {
+        val trimmedEmail = email.trim()
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             try {
-                val response = api.register(RegisterRequest(email, password))
+                val response = api.register(RegisterRequest(trimmedEmail, password))
                 tokenStore.saveToken(response.token)
                 registerFcmToken()
                 _uiState.value = AuthUiState.Success

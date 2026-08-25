@@ -1,20 +1,35 @@
 package com.efecandonmez.subtracker.app.ui.subscriptions
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.efecandonmez.subtracker.app.data.model.SubscriptionRequest
 import com.efecandonmez.subtracker.app.data.model.SubscriptionResponse
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubscriptionFormScreen(
     viewModel: SubscriptionFormViewModel,
     existing: SubscriptionResponse? = null,
+    knownServiceViewModel: KnownServiceViewModel,
     onSaved: () -> Unit
 ) {
+
+    var selectedDomain by remember { mutableStateOf(existing?.let { null } as String?) }
+    var expanded by remember { mutableStateOf(false) }
+    val services by knownServiceViewModel.services.collectAsState()
+
     var name by remember { mutableStateOf(existing?.name ?: "") }
     var price by remember { mutableStateOf(existing?.price?.toString() ?: "") }
     var currency by remember { mutableStateOf(existing?.currency ?: "TRY") }
@@ -24,6 +39,13 @@ fun SubscriptionFormScreen(
     var priceError by remember { mutableStateOf<String?>(null) }
     var nameError by remember { mutableStateOf<String?>(null) }
     var dateError by remember { mutableStateOf<String?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = existing?.nextPaymentDate?.let {
+            java.time.LocalDate.parse(it).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        }
+    )
+
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -39,14 +61,31 @@ fun SubscriptionFormScreen(
             if (existing == null) "Yeni Abonelik" else "Aboneliği Düzenle",
             style = MaterialTheme.typography.headlineSmall
         )
-
-        OutlinedTextField(
-            value = name, onValueChange = { name = it; nameError = null },
-            label = { Text("İsim") },
-            isError = nameError != null,
-            supportingText = { nameError?.let { Text(it) } },
-            modifier = Modifier.fillMaxWidth()
-        )
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it; selectedDomain = null; nameError = null },
+                label = { Text("İsim (listeden seç veya yaz)") },
+                isError = nameError != null,
+                supportingText = { nameError?.let { Text(it) } },
+                modifier = Modifier.fillMaxWidth().menuAnchor()
+            )
+            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                services.forEach { service ->
+                    DropdownMenuItem(
+                        text = { Text(service.name) },
+                        onClick = {
+                            name = service.name
+                            selectedDomain = service.domain
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
         OutlinedTextField(
             value = price, onValueChange = { price = it; priceError = null },
             label = { Text("Fiyat") },
@@ -62,12 +101,43 @@ fun SubscriptionFormScreen(
         }
 
         OutlinedTextField(
-            value = nextPaymentDate, onValueChange = { nextPaymentDate = it; dateError = null },
-            label = { Text("Sonraki Ödeme (yyyy-MM-dd)") },
+            value = nextPaymentDate,
+            onValueChange = { },
+            label = { Text("Sonraki Ödeme") },
+            readOnly = true,
             isError = dateError != null,
             supportingText = { dateError?.let { Text(it) } },
-            modifier = Modifier.fillMaxWidth()
+            trailingIcon = {
+                IconButton(onClick = { showDatePicker = true }) {
+                    Icon(Icons.Default.DateRange, contentDescription = "Tarih seç")
+                }
+            },
+            modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true }
         )
+        if (showDatePicker) {
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val date = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+                            nextPaymentDate = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                            dateError = null
+                        }
+                        showDatePicker = false
+                    }) {
+                        Text("Tamam")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text("İptal")
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
         OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Kategori") }, modifier = Modifier.fillMaxWidth())
 
         if (uiState is SubscriptionFormUiState.Error) {
@@ -97,7 +167,8 @@ fun SubscriptionFormScreen(
                         currency = currency,
                         billingCycle = billingCycle,
                         nextPaymentDate = nextPaymentDate,
-                        category = category.ifBlank { null }
+                        category = category.ifBlank { null },
+                        serviceDomain = selectedDomain
                     )
                     if (existing == null) viewModel.createSubscription(request)
                     else viewModel.updateSubscription(existing.id, request)

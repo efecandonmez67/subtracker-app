@@ -25,4 +25,7 @@ interface SubtrackerApi {
 
     @DELETE("subscriptions/{id}")
     suspend fun deleteSubscription(@Path("id") id: String)
+
+    @GET("known-services")
+    suspend fun getKnownServices(): List<KnownService>
 }

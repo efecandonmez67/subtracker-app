@@ -11,7 +11,8 @@ data class SubscriptionRequest(
     val currency: String,
     val billingCycle: String, // "MONTHLY" | "YEARLY"
     val nextPaymentDate: String, // "yyyy-MM-dd"
-    val category: String?
+    val category: String?,
+    val serviceDomain: String? = null
 )
 
 data class SubscriptionResponse(
@@ -22,5 +23,6 @@ data class SubscriptionResponse(
     val billingCycle: String,
     val nextPaymentDate: String,
     val category: String?,
-    val active: Boolean
+    val active: Boolean,
+    val serviceDomain: String? = null
 )

@@ -34,4 +34,21 @@ class SubscriptionListViewModel(private val api: SubtrackerApi) : ViewModel() {
             }
         }
     }
+
+    fun deleteSubscription(id: String) {
+        val currentState = _uiState.value
+        if (currentState is SubscriptionListUiState.Success) {
+            _uiState.value = SubscriptionListUiState.Success(
+                currentState.subscriptions.filter { it.id != id }
+            )
+        }
+
+        viewModelScope.launch {
+            try {
+                api.deleteSubscription(id)
+            } catch (e: Exception) {
+                loadSubscriptions()
+            }
+        }
+    }
 }

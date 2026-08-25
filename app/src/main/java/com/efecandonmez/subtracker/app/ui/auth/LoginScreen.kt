@@ -2,10 +2,15 @@ package com.efecandonmez.subtracker.app.ui.auth
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -17,6 +22,8 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val uiState by viewModel.uiState.collectAsState()
+    var passwordVisible by remember { mutableStateOf(false) }
+
 
     LaunchedEffect(uiState) {
         if (uiState is AuthUiState.Success) onLoginSuccess()
@@ -37,8 +44,20 @@ fun LoginScreen(
         )
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
-            value = password, onValueChange = { password = it },
-            label = { Text("Şifre") }, modifier = Modifier.fillMaxWidth()
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Şifre") },
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        contentDescription = if (passwordVisible) "Şifreyi gizle" else "Şifreyi göster"
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
         )
         Spacer(Modifier.height(16.dp))
 

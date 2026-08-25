@@ -1,5 +1,7 @@
 package com.efecandonmez.subtracker.app.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -15,12 +17,14 @@ import com.efecandonmez.subtracker.app.ui.auth.AuthViewModel
 import com.efecandonmez.subtracker.app.ui.auth.AuthViewModelFactory
 import com.efecandonmez.subtracker.app.ui.auth.LoginScreen
 import com.efecandonmez.subtracker.app.ui.auth.RegisterScreen
+import com.efecandonmez.subtracker.app.ui.subscriptions.KnownServiceViewModel
 import com.efecandonmez.subtracker.app.ui.subscriptions.SubscriptionFormScreen
 import com.efecandonmez.subtracker.app.ui.subscriptions.SubscriptionFormViewModel
 import com.efecandonmez.subtracker.app.ui.subscriptions.SubscriptionListScreen
 import com.efecandonmez.subtracker.app.ui.subscriptions.SubscriptionListViewModel
 import kotlinx.coroutines.flow.collectLatest
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation(api: SubtrackerApi, tokenStore: TokenStore, modifier: Modifier = Modifier) {
     val navController = rememberNavController()
@@ -56,13 +60,16 @@ fun AppNavigation(api: SubtrackerApi, tokenStore: TokenStore, modifier: Modifier
             val listViewModel: SubscriptionListViewModel = viewModel { SubscriptionListViewModel(api) }
             SubscriptionListScreen(
                 viewModel = listViewModel,
-                onAddClick = { navController.navigate("subscription_form") }
+                onAddClick = { navController.navigate("subscription_form") },
+                onDeleteConfirmed = { id -> listViewModel.deleteSubscription(id) }
             )
         }
         composable("subscription_form") {
             val formViewModel: SubscriptionFormViewModel = viewModel { SubscriptionFormViewModel(api) }
+            val knownServiceViewModel: KnownServiceViewModel = viewModel { KnownServiceViewModel(api) }
             SubscriptionFormScreen(
                 viewModel = formViewModel,
+                knownServiceViewModel = knownServiceViewModel,
                 onSaved = { navController.popBackStack() }
             )
         }
