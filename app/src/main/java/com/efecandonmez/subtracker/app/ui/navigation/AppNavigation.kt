@@ -22,6 +22,7 @@ import com.efecandonmez.subtracker.app.ui.subscriptions.SubscriptionFormScreen
 import com.efecandonmez.subtracker.app.ui.subscriptions.SubscriptionFormViewModel
 import com.efecandonmez.subtracker.app.ui.subscriptions.SubscriptionListScreen
 import com.efecandonmez.subtracker.app.ui.subscriptions.SubscriptionListViewModel
+import com.efecandonmez.subtracker.app.ui.subscriptions.SummaryViewModel
 import kotlinx.coroutines.flow.collectLatest
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -58,8 +59,10 @@ fun AppNavigation(api: SubtrackerApi, tokenStore: TokenStore, modifier: Modifier
         }
         composable("subscriptions") {
             val listViewModel: SubscriptionListViewModel = viewModel { SubscriptionListViewModel(api) }
+            val summaryViewModel: SummaryViewModel = viewModel { SummaryViewModel(api) }
             SubscriptionListScreen(
                 viewModel = listViewModel,
+                summaryViewModel = summaryViewModel,
                 onAddClick = { navController.navigate("subscription_form") },
                 onDeleteConfirmed = { id -> listViewModel.deleteSubscription(id) }
             )

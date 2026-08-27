@@ -28,4 +28,7 @@ interface SubtrackerApi {
 
     @GET("known-services")
     suspend fun getKnownServices(): List<KnownService>
+
+    @GET("subscriptions/summary")
+    suspend fun getSummary(): SubscriptionSummary
 }

@@ -2,7 +2,6 @@ package com.efecandonmez.subtracker.app.ui.subscriptions
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,17 +18,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubscriptionListScreen(
     viewModel: SubscriptionListViewModel,
+    summaryViewModel: SummaryViewModel,
     onAddClick: () -> Unit,
     onDeleteConfirmed: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val summary by summaryViewModel.summary.collectAsState()
 
-    LaunchedEffect(Unit) { viewModel.loadSubscriptions() }
+    LaunchedEffect(Unit) {
+        viewModel.loadSubscriptions()
+        summaryViewModel.loadSummary()
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -76,6 +89,42 @@ fun SubscriptionListScreen(
                         }
                     }                } else {
                     LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
+                        item {
+                            summary?.let { s ->
+                                Card(
+                                    Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                                ) {
+                                    Column(Modifier.padding(16.dp)) {
+                                        Text("Bu ay toplam", style = MaterialTheme.typography.bodyMedium)
+                                        Text(
+                                            "%.2f".format(s.totalMonthly),
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+
+                                        if (s.byCategory.isNotEmpty()) {
+                                            Spacer(Modifier.height(12.dp))
+                                            val modelProducer = remember { CartesianChartModelProducer() }
+                                            LaunchedEffect(s) {
+                                                modelProducer.runTransaction {
+                                                    columnSeries { series(s.byCategory.map { it.monthlyTotal }) }
+                                                }
+                                            }
+                                            CartesianChartHost(
+                                                chart = rememberCartesianChart(
+                                                    rememberColumnCartesianLayer(),
+                                                    startAxis = VerticalAxis.rememberStart(),
+                                                    bottomAxis = HorizontalAxis.rememberBottom()
+                                                ),
+                                                modelProducer = modelProducer,
+                                                modifier = Modifier.height(150.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         items(state.subscriptions, key = { it.id }) { sub ->
                             val dismissState = rememberSwipeToDismissBoxState(
                                 confirmValueChange = { value ->
