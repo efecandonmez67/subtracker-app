@@ -31,4 +31,7 @@ interface SubtrackerApi {
 
     @GET("subscriptions/summary")
     suspend fun getSummary(): SubscriptionSummary
+
+    @GET("badges")
+    suspend fun getBadges(): List<UserBadge>
 }
