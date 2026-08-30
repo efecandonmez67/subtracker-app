@@ -23,3 +23,8 @@ val BackgroundDark = Color(0xFF17141F)
 val SurfaceDark = Color(0xFF221E2E)
 val OnSurfaceDark = Color(0xFFEDE7F6)
 val ErrorDark = Color(0xFFF87171)
+
+val GradientStartLight = Color(0xFF7C3AED)
+val GradientEndLight = Color(0xFFC4A6FF)
+val GradientStartDark = Color(0xFF4B2E9E)
+val GradientEndDark = Color(0xFF7C3AED)

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -14,19 +15,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
+import com.efecandonmez.subtracker.app.ui.theme.GradientEndLight
+import com.efecandonmez.subtracker.app.ui.theme.GradientStartLight
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,39 +83,33 @@ fun SubscriptionListScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                    }                } else {
+                    }
+                } else {
                     LazyColumn(Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
                         item {
                             summary?.let { s ->
-                                Card(
-                                    Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                                Box(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp)
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(
+                                            Brush.linearGradient(
+                                                colors = listOf(GradientStartLight, GradientEndLight)
+                                            )
+                                        )
                                 ) {
-                                    Column(Modifier.padding(16.dp)) {
-                                        Text("Bu ay toplam", style = MaterialTheme.typography.bodyMedium)
+                                    Column(Modifier.padding(20.dp)) {
+                                        Text("Bu ay toplam", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.85f))
                                         Text(
-                                            "%.2f".format(s.totalMonthly),
-                                            style = MaterialTheme.typography.headlineMedium,
-                                            color = MaterialTheme.colorScheme.primary
+                                            "%.0f".format(s.totalMonthly),
+                                            style = MaterialTheme.typography.headlineLarge,
+                                            color = Color.White
                                         )
 
                                         if (s.byCategory.isNotEmpty()) {
-                                            Spacer(Modifier.height(12.dp))
-                                            val modelProducer = remember { CartesianChartModelProducer() }
-                                            LaunchedEffect(s) {
-                                                modelProducer.runTransaction {
-                                                    columnSeries { series(s.byCategory.map { it.monthlyTotal }) }
-                                                }
-                                            }
-                                            CartesianChartHost(
-                                                chart = rememberCartesianChart(
-                                                    rememberColumnCartesianLayer(),
-                                                    startAxis = VerticalAxis.rememberStart(),
-                                                    bottomAxis = HorizontalAxis.rememberBottom()
-                                                ),
-                                                modelProducer = modelProducer,
-                                                modifier = Modifier.height(150.dp)
-                                            )
+                                            Spacer(Modifier.height(16.dp))
+                                            DonutChart(data = s.byCategory, textColor = Color.White)
                                         }
                                     }
                                 }
@@ -143,7 +133,7 @@ fun SubscriptionListScreen(
                                     Box(
                                         Modifier
                                             .fillMaxSize()
-                                            .clip(MaterialTheme.shapes.medium)
+                                            .clip(RoundedCornerShape(20.dp))
                                             .background(MaterialTheme.colorScheme.error),
                                         contentAlignment = Alignment.CenterEnd
                                     ) {
@@ -156,65 +146,67 @@ fun SubscriptionListScreen(
                                     }
                                 }
                             ) {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                            ) {
-                                Row(
-                                    Modifier.padding(16.dp).fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(20.dp),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                                 ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        if (sub.serviceDomain != null) {
-                                            AsyncImage(
-                                                model = "https://www.google.com/s2/favicons?domain=${sub.serviceDomain}&sz=128",
-                                                contentDescription = sub.name,
-                                                modifier = Modifier
-                                                    .size(40.dp)
-                                                    .clip(CircleShape)
-                                                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
-                                                error = painterResource(android.R.drawable.ic_menu_gallery)
-                                            )
-                                        } else {
-                                            Box(
-                                                Modifier
-                                                    .size(40.dp)
-                                                    .clip(CircleShape)
-                                                    .background(MaterialTheme.colorScheme.secondaryContainer),
-                                                contentAlignment = Alignment.Center
-                                            ) {
+                                    Row(
+                                        Modifier.padding(16.dp).fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            if (sub.serviceDomain != null) {
+                                                AsyncImage(
+                                                    model = "https://www.google.com/s2/favicons?domain=${sub.serviceDomain}&sz=128",
+                                                    contentDescription = sub.name,
+                                                    modifier = Modifier
+                                                        .size(40.dp)
+                                                        .clip(CircleShape)
+                                                        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+                                                    error = painterResource(android.R.drawable.ic_menu_gallery)
+                                                )
+                                            } else {
+                                                Box(
+                                                    Modifier
+                                                        .size(40.dp)
+                                                        .clip(CircleShape)
+                                                        .background(MaterialTheme.colorScheme.secondaryContainer),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        sub.name.take(1).uppercase(),
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                    )
+                                                }
+                                            }
+
+                                            Spacer(Modifier.width(12.dp))
+
+                                            Column {
+                                                Text(sub.name, style = MaterialTheme.typography.titleMedium)
                                                 Text(
-                                                    sub.name.take(1).uppercase(),
-                                                    style = MaterialTheme.typography.titleMedium,
-                                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                    "Sonraki ödeme: ${sub.nextPaymentDate}",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
                                         }
 
-                                        Spacer(Modifier.width(12.dp))
-
-                                        Column {
-                                            Text(sub.name, style = MaterialTheme.typography.titleMedium)
+                                        Column(horizontalAlignment = Alignment.End) {
                                             Text(
-                                                "Sonraki ödeme: ${sub.nextPaymentDate}",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                "${sub.price} ${sub.currency}",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(
+                                                if (sub.billingCycle == "MONTHLY") "Aylık" else "Yıllık",
+                                                style = MaterialTheme.typography.bodySmall
                                             )
                                         }
-                                    }
-
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text(
-                                            "${sub.price} ${sub.currency}",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                        Text(
-                                            if (sub.billingCycle == "MONTHLY") "Aylık" else "Yıllık",
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
                                     }
                                 }
                             }
@@ -224,4 +216,4 @@ fun SubscriptionListScreen(
             }
         }
     }
-}}
+}

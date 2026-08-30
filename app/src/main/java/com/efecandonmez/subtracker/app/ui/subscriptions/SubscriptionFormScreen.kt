@@ -2,19 +2,29 @@ package com.efecandonmez.subtracker.app.ui.subscriptions
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import com.efecandonmez.subtracker.app.data.model.SubscriptionRequest
 import com.efecandonmez.subtracker.app.data.model.SubscriptionResponse
+import com.efecandonmez.subtracker.app.ui.theme.GradientEndLight
+import com.efecandonmez.subtracker.app.ui.theme.GradientStartLight
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import androidx.compose.ui.graphics.Color
+
+private val CATEGORIES = listOf("Streaming", "Müzik", "Yazılım", "Oyun", "Fitness", "Eğitim", "Bulut Depolama", "Haber", "Diğer")
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,6 +46,7 @@ fun SubscriptionFormScreen(
     var billingCycle by remember { mutableStateOf(existing?.billingCycle ?: "MONTHLY") }
     var nextPaymentDate by remember { mutableStateOf(existing?.nextPaymentDate ?: "") }
     var category by remember { mutableStateOf(existing?.category ?: "") }
+    var categoryExpanded by remember { mutableStateOf(false) }
     var priceError by remember { mutableStateOf<String?>(null) }
     var nameError by remember { mutableStateOf<String?>(null) }
     var dateError by remember { mutableStateOf<String?>(null) }
@@ -46,7 +57,6 @@ fun SubscriptionFormScreen(
         }
     )
 
-
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState) {
@@ -54,13 +64,31 @@ fun SubscriptionFormScreen(
     }
 
     Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .background(Brush.horizontalGradient(listOf(GradientStartLight, GradientEndLight))),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                if (existing == null) "Yeni Abonelik" else "Aboneliği Düzenle",
+                style = MaterialTheme.typography.headlineSmall,
+                color = Color.White,
+                modifier = Modifier.padding(24.dp)
+            )
+        }
+
+    Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            if (existing == null) "Yeni Abonelik" else "Aboneliği Düzenle",
-            style = MaterialTheme.typography.headlineSmall
-        )
+
+
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
@@ -86,6 +114,7 @@ fun SubscriptionFormScreen(
                 }
             }
         }
+
         OutlinedTextField(
             value = price, onValueChange = { price = it; priceError = null },
             label = { Text("Fiyat") },
@@ -138,7 +167,31 @@ fun SubscriptionFormScreen(
                 DatePicker(state = datePickerState)
             }
         }
-        OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Kategori") }, modifier = Modifier.fillMaxWidth())
+
+        ExposedDropdownMenuBox(
+            expanded = categoryExpanded,
+            onExpandedChange = { categoryExpanded = !categoryExpanded }
+        ) {
+            OutlinedTextField(
+                value = category,
+                onValueChange = { },
+                readOnly = true,
+                label = { Text("Kategori") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
+                modifier = Modifier.fillMaxWidth().menuAnchor()
+            )
+            ExposedDropdownMenu(expanded = categoryExpanded, onDismissRequest = { categoryExpanded = false }) {
+                CATEGORIES.forEach { cat ->
+                    DropdownMenuItem(
+                        text = { Text(cat) },
+                        onClick = {
+                            category = cat
+                            categoryExpanded = false
+                        }
+                    )
+                }
+            }
+        }
 
         if (uiState is SubscriptionFormUiState.Error) {
             Text((uiState as SubscriptionFormUiState.Error).message, color = MaterialTheme.colorScheme.error)
@@ -180,4 +233,4 @@ fun SubscriptionFormScreen(
             Text(if (uiState is SubscriptionFormUiState.Loading) "Kaydediliyor..." else "Kaydet")
         }
     }
-}
+} }
